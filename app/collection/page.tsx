@@ -10,7 +10,12 @@ export default async function PageCollection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-4xl font-black">Ma collection</h1>
+      <div>
+        <p className="mb-3 text-[11px] tracking-[0.35em] text-or uppercase">Édition Maison</p>
+        <h1 className="font-serif text-5xl font-normal text-ivoire">
+          Ma <span className="text-or-clair italic">collection</span>
+        </h1>
+      </div>
       <Collection cartes={cartes} />
     </div>
   );

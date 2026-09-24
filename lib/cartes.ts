@@ -14,32 +14,33 @@ export const RARETES: Record<
   Rarete,
   { label: string; classes: string; texte: string }
 > = {
+  // Chaque rareté a sa teinte de métal : pierre, vert-de-gris, saphir, améthyste, or
   commun: {
     label: "Commune",
-    classes: "border-zinc-500 bg-gradient-to-b from-zinc-700 to-zinc-900",
-    texte: "text-zinc-300",
+    classes: "border-stone-600/70 bg-gradient-to-b from-[#1c1b19] to-[#0f0e0d]",
+    texte: "text-stone-400",
   },
   peu_commun: {
     label: "Peu commune",
-    classes: "border-emerald-400 bg-gradient-to-b from-emerald-800 to-zinc-900",
-    texte: "text-emerald-300",
+    classes: "border-[#5f8a7c]/70 bg-gradient-to-b from-[#16201d] to-[#0e0f0e]",
+    texte: "text-[#8fb5a8]",
   },
   rare: {
     label: "Rare",
     classes:
-      "border-sky-400 bg-gradient-to-b from-sky-800 to-zinc-900 shadow-lg shadow-sky-500/30",
-    texte: "text-sky-300",
+      "border-[#6f8fb8]/80 bg-gradient-to-b from-[#161c27] to-[#0d0e11] shadow-lg shadow-[#6f8fb8]/10",
+    texte: "text-[#a4bddc]",
   },
   epique: {
     label: "Épique",
     classes:
-      "border-purple-400 bg-gradient-to-b from-purple-800 to-zinc-900 shadow-xl shadow-purple-500/50",
-    texte: "text-purple-300",
+      "border-[#9a7cc0]/80 bg-gradient-to-b from-[#1e1826] to-[#0e0d11] shadow-xl shadow-[#9a7cc0]/15",
+    texte: "text-[#c4b0e0]",
   },
   ultra_rare: {
     label: "Ultra rare",
-    classes: "carte-holo border-amber-300 shadow-2xl shadow-amber-400/60",
-    texte: "text-amber-200",
+    classes: "carte-doree border-or shadow-2xl shadow-or/25",
+    texte: "text-or-clair",
   },
 };
 

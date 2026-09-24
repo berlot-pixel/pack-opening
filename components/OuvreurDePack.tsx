@@ -16,9 +16,9 @@ const DUREE_DEPART = 350;
 
 // Couleur du halo qui apparaît derrière les cartes rares quand on les retourne
 const HALOS: Partial<Record<Rarete, string>> = {
-  rare: "#38bdf8",
-  epique: "#c084fc",
-  ultra_rare: "#fcd34d",
+  rare: "#6f8fb8",
+  epique: "#9a7cc0",
+  ultra_rare: "#c9a55c",
 };
 const TRES_RARES: Rarete[] = ["epique", "ultra_rare"];
 
@@ -115,7 +115,9 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   if (etape === "resume") {
     return (
       <div className="flex w-full flex-col items-center gap-8">
-        <h2 className="text-2xl font-bold">Ton butin</h2>
+        <h2 className="font-serif text-4xl text-ivoire">
+          Ton <span className="text-or-clair italic">tirage</span>
+        </h2>
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {pack.map((carte, i) => (
             <div key={i} className="carte-arrive" style={{ animationDelay: `${i * 100}ms` }}>
@@ -128,7 +130,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
         </div>
         <button
           onClick={() => setEtape("ferme")}
-          className="cursor-pointer rounded-full bg-yellow-400 px-8 py-3 text-lg font-bold text-black shadow-lg transition hover:scale-105 hover:bg-yellow-300"
+          className="cursor-pointer border border-or/70 px-8 py-3 text-[11px] tracking-[0.3em] text-or-clair uppercase transition hover:bg-or hover:text-[#0c0b0a]"
         >
           Ouvrir un autre booster
         </button>
@@ -140,7 +142,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   const halo = etape === "pile" && revelee ? HALOS[carteDessus.rarete] : undefined;
 
   let aide = "";
-  if (etape === "ferme") aide = "Clique sur le booster pour le déchirer !";
+  if (etape === "ferme") aide = "Touche le booster pour le déchirer";
   if (etape === "pile") aide = revelee ? "Clique pour la carte suivante" : "Clique pour retourner la carte";
 
   return (
@@ -180,7 +182,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
                         "--halo": HALOS[carte.rarete],
                       } as CSSProperties
                     }
-                    className={`carte-flip absolute inset-0 rounded-xl transition-transform duration-300 enabled:cursor-pointer ${
+                    className={`carte-flip absolute inset-0 rounded-lg transition-transform duration-300 enabled:cursor-pointer ${
                       dessus && revelee ? "retournee" : ""
                     } ${dessus && depart ? "carte-depart" : ""} ${tease ? "carte-tease" : ""}`}
                   >
@@ -212,49 +214,56 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
               onClick={ouvrir}
               disabled={etape !== "ferme"}
               aria-label="Déchirer le booster"
-              className="group absolute inset-0 drop-shadow-[0_20px_35px_rgb(139_92_246_/_0.4)] enabled:cursor-pointer enabled:transition enabled:hover:scale-105"
+              className="group absolute inset-0 drop-shadow-[0_25px_40px_rgb(0_0_0/0.7)] enabled:cursor-pointer enabled:transition enabled:duration-500 enabled:hover:scale-[1.03]"
             >
               {/* Bande du haut, celle qu'on arrache (son bas suit la ligne de déchirure) */}
               <div
-                className={`absolute inset-x-0 top-0 h-12 rounded-t-2xl border-4 border-b-0 border-yellow-300 bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-700 transition ${
-                  etape === "ferme" ? "group-hover:-translate-y-1 group-hover:rotate-2" : "bande-arrachee"
+                className={`absolute inset-x-0 top-0 h-12 rounded-t-lg border border-b-0 border-or/50 bg-gradient-to-b from-[#26221c] to-[#1c1915] transition duration-500 ${
+                  etape === "ferme" ? "group-hover:-translate-y-0.5 group-hover:rotate-1" : "bande-arrachee"
                 }`}
                 style={{ clipPath: DECOUPE_BANDE }}
               >
-                <div className="pack-sertissage absolute inset-x-0 top-0 h-3 rounded-t-xl" />
+                <div className="pack-sertissage absolute inset-x-0 top-0 h-3 rounded-t-md" />
                 {etape !== "ferme" && (
-                  <div className="absolute inset-0 bg-white/80" style={{ clipPath: BORD_BANDE }} />
+                  <div className="absolute inset-0 bg-ivoire/70" style={{ clipPath: BORD_BANDE }} />
                 )}
               </div>
 
               {/* Corps du paquet (son haut suit la même ligne de déchirure) */}
               <div
-                className={`absolute inset-x-0 top-10 bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl border-4 border-t-0 border-yellow-300 bg-gradient-to-br from-fuchsia-600 via-violet-700 to-indigo-800 ${
+                className={`absolute inset-x-0 top-10 bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-lg border border-t-0 border-or/50 bg-gradient-to-b from-[#1d1a16] via-[#12100e] to-[#0b0a09] ${
                   etape === "dechirure" ? "pack-tremble" : ""
                 }`}
                 style={{ clipPath: DECOUPE_CORPS }}
               >
                 {etape === "ferme" ? (
-                  <div className="absolute inset-x-0 top-1 border-t-2 border-dashed border-white/60" />
+                  <div className="absolute inset-x-0 top-1 border-t border-dashed border-or/40" />
                 ) : (
                   // Le bord déchiré apparaît de gauche à droite
                   <div className="dechirure-avance absolute inset-x-0 top-0 h-3">
-                    <div className="h-full bg-white/80" style={{ clipPath: BORD_CORPS }} />
+                    <div className="h-full bg-ivoire/70" style={{ clipPath: BORD_CORPS }} />
                   </div>
                 )}
                 <div className="pack-reflet" />
-                <div className="pack-sertissage absolute inset-x-0 bottom-0 h-3 rounded-b-xl" />
+                <div className="pack-sertissage absolute inset-x-0 bottom-0 h-3 rounded-b-md" />
+                <div className="absolute inset-x-3 top-4 bottom-5 rounded-sm border border-or/20" />
 
-                <span className="text-7xl transition group-hover:scale-110">🏠</span>
-                <span className="text-2xl font-black tracking-wide text-yellow-300 drop-shadow">
-                  BOOSTER
+                <span className="text-[9px] tracking-[0.4em] text-or/80 uppercase">Édition Maison</span>
+                <div className="my-1 flex size-20 items-center justify-center rounded-full border border-or/60 transition duration-500 group-hover:border-or">
+                  <div className="flex size-16 items-center justify-center rounded-full border border-or/25 font-serif text-4xl text-or-clair italic">
+                    P
+                  </div>
+                </div>
+                <span className="font-serif text-3xl tracking-wide text-ivoire">Booster</span>
+                <span className="-mt-2 font-serif text-sm text-white/55 italic">Objets de la maison</span>
+                <div className="h-px w-10 bg-or/50" />
+                <span className="text-[9px] tracking-[0.3em] text-white/45 uppercase">
+                  5 cartes · 1 rare garantie
                 </span>
-                <span className="text-sm text-white/80">Objets de la maison</span>
-                <span className="text-xs text-white/60">5 cartes · 1 Rare garantie</span>
               </div>
 
               {etape === "ferme" && (
-                <span className="absolute top-7 -left-2 text-lg text-white drop-shadow">✂</span>
+                <span className="absolute top-[30px] -left-3 text-sm text-or/80">✂</span>
               )}
               {etape !== "ferme" && (
                 <div className="pack-lumiere" style={{ top: HAUTEUR_BANDE - 20 }} />
@@ -283,15 +292,15 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
 
       <div className="flex min-h-20 flex-col items-center gap-3">
         {etape === "pile" && (
-          <p className="text-sm font-semibold text-white/50">
-            Carte {courante + 1} / {pack.length}
+          <p className="font-serif text-xl text-or-clair">
+            {courante + 1} <span className="text-white/30">/ {pack.length}</span>
           </p>
         )}
-        <p className="text-white/70">{aide}</p>
+        <p className="text-[11px] tracking-[0.25em] text-white/45 uppercase">{aide}</p>
         {etape === "pile" && (
           <button
             onClick={() => setEtape("resume")}
-            className="cursor-pointer rounded-full border border-white/30 px-5 py-1.5 text-sm text-white/70 transition hover:bg-white/10"
+            className="cursor-pointer border-b border-white/20 pb-0.5 text-[11px] tracking-[0.2em] text-white/40 uppercase transition hover:border-or hover:text-or-clair"
           >
             Tout voir d&apos;un coup
           </button>

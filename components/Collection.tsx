@@ -11,16 +11,20 @@ export function Collection({ cartes }: { cartes: Carte[] }) {
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-        <div className="mb-2 flex flex-wrap justify-between gap-2 text-sm text-white/80">
+      <div className="border-y border-or/15 py-5">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-[11px] tracking-[0.25em] text-white/50 uppercase">
           <span>
-            <strong className="text-white">{trouvees}</strong> / {cartes.length} cartes trouvées
+            <span className="mr-2 font-serif text-3xl tracking-normal text-ivoire normal-case">
+              {trouvees}
+              <span className="text-white/30"> / {cartes.length}</span>
+            </span>
+            cartes trouvées
           </span>
           <span>{packs} boosters ouverts</span>
         </div>
-        <div className="h-3 overflow-hidden rounded-full bg-white/10">
+        <div className="h-px bg-white/10">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-yellow-300 to-fuchsia-500 transition-all"
+            className="h-full bg-gradient-to-r from-or/60 to-or-clair transition-all"
             style={{ width: `${pourcentage}%` }}
           />
         </div>
@@ -33,9 +37,9 @@ export function Collection({ cartes }: { cartes: Carte[] }) {
 
         return (
           <section key={rarete}>
-            <h2 className={`mb-4 text-xl font-bold ${RARETES[rarete].texte}`}>
-              {RARETES[rarete].label}{" "}
-              <span className="text-sm font-normal text-white/50">
+            <h2 className={`mb-5 flex items-baseline gap-3 font-serif text-2xl ${RARETES[rarete].texte}`}>
+              {RARETES[rarete].label}
+              <span className="font-sans text-[11px] tracking-[0.2em] text-white/40">
                 {trouveesIci} / {liste.length}
               </span>
             </h2>
@@ -51,9 +55,11 @@ export function Collection({ cartes }: { cartes: Carte[] }) {
                 ) : (
                   <div
                     key={carte.id}
-                    className="flex aspect-[5/7] w-full items-center justify-center rounded-xl border-4 border-dashed border-white/15 bg-white/5 text-4xl font-black text-white/20"
+                    className="aspect-[5/7] w-full rounded-lg border border-white/10 bg-white/[0.02] p-1.5"
                   >
-                    ?
+                    <div className="flex h-full items-center justify-center rounded-[5px] border border-dashed border-white/10 font-serif text-4xl text-white/15 italic">
+                      ?
+                    </div>
                   </div>
                 );
               })}
