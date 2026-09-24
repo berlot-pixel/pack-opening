@@ -64,17 +64,189 @@ body {
   }
 }
 
-/* Le pack tremble avant de s'ouvrir */
-.pack-secoue {
-  animation: secoue 0.8s ease-in-out;
+/* ---- Ouverture du booster ---- */
+
+/* Bords sertis du paquet, comme l'aluminium d'un vrai booster */
+.pack-sertissage {
+  background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.35) 0 2px, transparent 2px 6px);
 }
-@keyframes secoue {
-  0%, 100% { transform: rotate(0) scale(1); }
-  20% { transform: rotate(-6deg) scale(1.05); }
-  40% { transform: rotate(6deg) scale(1.1); }
-  60% { transform: rotate(-4deg) scale(1.15); }
-  80% { transform: rotate(4deg) scale(1.2); opacity: 1; }
-  100% { opacity: 0; transform: scale(1.4); }
+
+/* Reflet qui passe sur le paquet */
+.pack-reflet {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.pack-reflet::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  bottom: -50%;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: rotate(20deg);
+  animation: reflet 3.5s ease-in-out infinite;
+}
+@keyframes reflet {
+  0%, 60% { left: -60%; }
+  100% { left: 130%; }
+}
+
+/* Le paquet flotte en attendant qu'on l'ouvre */
+.pack-flotte {
+  animation: flotte 3s ease-in-out infinite;
+}
+@keyframes flotte {
+  50% { transform: translateY(-8px) rotate(-1deg); }
+}
+
+/* La bande du haut se déchire de gauche à droite : elle se soulève petit à petit
+   en restant accrochée à droite, puis se détache et s'envole */
+.bande-arrachee {
+  transform-origin: right bottom;
+  animation: arrache 1.05s linear forwards;
+}
+@keyframes arrache {
+  0% { transform: none; animation-timing-function: ease-out; }
+  12% { transform: rotate(3deg) translateY(-2px); animation-timing-function: linear; }
+  60% { transform: rotate(14deg) translateY(-6px); animation-timing-function: ease-out; }
+  68% { transform: rotate(20deg) translate(6px, -12px); animation-timing-function: ease-in; }
+  100% { transform: translate(170px, -220px) rotate(70deg); opacity: 0; }
+}
+
+/* Le bord blanc déchiré avance de gauche à droite, au même rythme que la bande */
+.dechirure-avance {
+  animation: dechirure-avance 0.6s linear 0.12s both;
+}
+@keyframes dechirure-avance {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* Petits morceaux d'emballage qui sautent le long de la déchirure */
+.morceau-emballage {
+  position: absolute;
+  border-radius: 1px;
+  background: #fef08a;
+  box-shadow: 0 0 4px #fff;
+  pointer-events: none;
+  animation: morceau 0.6s ease-out both;
+}
+@keyframes morceau {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate(var(--dx), -50px) rotate(200deg); }
+}
+
+/* Le paquet tremble pendant qu'on le déchire */
+.pack-tremble {
+  animation: tremble 0.15s linear 6;
+}
+@keyframes tremble {
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Lumière qui sort du paquet ouvert */
+.pack-lumiere {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff, rgb(253 224 71 / 0.6), transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: lumiere 0.6s ease-out 0.5s forwards;
+}
+@keyframes lumiere {
+  to { opacity: 1; transform: scaleY(1.8); }
+}
+
+/* Le paquet tombe pendant que les cartes sortent par le haut */
+.pack-descend {
+  animation: descend 0.5s ease-in 0.35s forwards;
+}
+@keyframes descend {
+  to { transform: translateY(110%) rotate(4deg); opacity: 0; }
+}
+.pile-sort {
+  animation: sort 0.8s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+}
+@keyframes sort {
+  0% { transform: translateY(10%); }
+  45% { transform: translateY(-40%); }
+  100% { transform: none; }
+}
+
+/* La carte regardée s'envole sur le côté */
+.carte-depart {
+  animation: depart 0.35s ease-in forwards;
+}
+@keyframes depart {
+  to { transform: translate(-140%, -10%) rotate(-25deg); opacity: 0; }
+}
+
+/* Une carte Épique ou Ultra rare brille avant d'être retournée */
+.carte-tease {
+  animation: tease 1.2s ease-in-out infinite;
+}
+@keyframes tease {
+  50% { box-shadow: 0 0 30px 6px var(--halo); }
+}
+
+/* Halo derrière une carte rare révélée */
+.halo {
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--halo), transparent 70%);
+  pointer-events: none;
+  animation: halo-apparait 0.5s ease-out both, halo-pulse 2s ease-in-out 0.5s infinite;
+}
+.halo-rayons::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--halo) 0deg 6deg, transparent 6deg 20deg);
+  mask: radial-gradient(closest-side, #000 20%, transparent 75%);
+  opacity: 0.6;
+  animation: tourne 8s linear infinite;
+}
+@keyframes halo-apparait {
+  from { opacity: 0; transform: scale(0.4); }
+}
+@keyframes halo-pulse {
+  50% { opacity: 0.6; }
+}
+@keyframes tourne {
+  to { transform: rotate(1turn); }
+}
+
+/* Flash blanc pour une Ultra rare */
+.flash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #fff;
+  pointer-events: none;
+  animation: flash 0.7s ease-out forwards;
+}
+@keyframes flash {
+  from { opacity: 0.8; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-flotte,
+  .pack-reflet::after,
+  .carte-tease,
+  .halo-rayons::before {
+    animation: none;
+  }
 }
 
 /* Les cartes arrivent une par une */

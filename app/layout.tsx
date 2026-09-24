@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { LienAccueil } from "@/components/LienAccueil";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,13 +28,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col font-sans">
         <header className="border-b border-white/10 bg-black/30 backdrop-blur">
           <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <Link href="/" className="text-lg font-black tracking-tight">
+            <LienAccueil className="text-lg font-black tracking-tight">
               🏠 Pack<span className="text-yellow-300">Opening</span>
-            </Link>
+            </LienAccueil>
             <div className="flex gap-1 text-sm">
-              <Link href="/" className="rounded-full px-4 py-2 transition hover:bg-white/10">
+              <LienAccueil className="rounded-full px-4 py-2 transition hover:bg-white/10">
                 Ouvrir
-              </Link>
+              </LienAccueil>
               <Link href="/collection" className="rounded-full px-4 py-2 transition hover:bg-white/10">
                 Collection
               </Link>
