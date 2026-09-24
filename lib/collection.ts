@@ -2,11 +2,19 @@ import { useSyncExternalStore } from "react";
 import { prixDeVente, type Carte } from "./cartes";
 
 // Collection et coins sauvegardés dans le navigateur du joueur
-export type Sauvegarde = { cartes: Record<number, number>; packs: number; coins: number };
+export type Sauvegarde = {
+  cartes: Record<number, number>;
+  packs: number;
+  coins: number;
+  dernierPack: number; // date d'ouverture du dernier paquet (en ms), 0 si jamais
+};
+
+// On peut ouvrir un paquet toutes les 5 minutes
+export const DELAI_ENTRE_PACKS = 5 * 60 * 1000;
 
 const CLE = "pack-opening:collection";
 const EVENEMENT = "pack-opening:maj";
-const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0 };
+const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0, dernierPack: 0 };
 
 let etat: Sauvegarde | null = null;
 
@@ -49,11 +57,26 @@ export function useCollection(): Sauvegarde {
   return useSyncExternalStore(sAbonner, lire, () => VIDE);
 }
 
+// Heure actuelle en secondes, mise à jour chaque seconde (0 côté serveur)
+function sAbonnerHorloge(callback: () => void) {
+  const id = setInterval(callback, 1000);
+  return () => clearInterval(id);
+}
+const secondeActuelle = () => Math.floor(Date.now() / 1000);
+
+// Millisecondes restantes avant de pouvoir ouvrir le prochain paquet (0 = disponible)
+export function useAttentePack(): number {
+  const { dernierPack } = useCollection();
+  const maintenant = useSyncExternalStore(sAbonnerHorloge, secondeActuelle, () => 0);
+  if (!dernierPack || !maintenant) return 0;
+  return Math.max(0, dernierPack + DELAI_ENTRE_PACKS - maintenant * 1000);
+}
+
 export function ajouterPack(pack: Carte[]) {
   const actuel = lire();
   const cartes = { ...actuel.cartes };
   for (const carte of pack) cartes[carte.id] = (cartes[carte.id] ?? 0) + 1;
-  enregistrer({ ...actuel, cartes, packs: actuel.packs + 1 });
+  enregistrer({ ...actuel, cartes, packs: actuel.packs + 1, dernierPack: Date.now() });
 }
 
 // Vend un exemplaire de la carte (si c'était le dernier, elle quitte la collection)

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { prixDeVente, tirerPack, type Carte, type Rarete } from "@/lib/cartes";
-import { ajouterPack, useCollection } from "@/lib/collection";
+import { ajouterPack, DELAI_ENTRE_PACKS, useAttentePack, useCollection } from "@/lib/collection";
 import { CarteVisuelle, DosDeCarte } from "./CarteVisuelle";
 import { EVENEMENT_RETOUR_ACCUEIL } from "./LienAccueil";
 import { PieceCoin } from "./Navigation";
@@ -22,6 +22,12 @@ const HALOS: Partial<Record<Rarete, string>> = {
   ultra_rare: "#c9a55c",
 };
 const TRES_RARES: Rarete[] = ["epique", "ultra_rare"];
+
+// 272000 ms → "4:32"
+function formaterAttente(ms: number) {
+  const secondes = Math.ceil(ms / 1000);
+  return `${Math.floor(secondes / 60)}:${String(secondes % 60).padStart(2, "0")}`;
+}
 
 // Ligne de déchirure en dents irrégulières (profondeur de chaque dent en px),
 // partagée par la bande du haut et le corps du paquet pour qu'ils s'emboîtent parfaitement.
@@ -62,7 +68,9 @@ const MORCEAUX = [
 
 export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   const collection = useCollection();
+  const attente = useAttentePack();
   const [etape, setEtape] = useState<Etape>("ferme");
+  const bloque = etape === "ferme" && attente > 0;
   const [pack, setPack] = useState<Carte[]>([]);
   const [nouvelles, setNouvelles] = useState<Set<number>>(new Set());
   const [courante, setCourante] = useState(0);
@@ -95,6 +103,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   }, []);
 
   function ouvrir() {
+    if (collection.dernierPack + DELAI_ENTRE_PACKS > Date.now()) return;
     annulerMinuteurs();
     const tirage = tirerPack(cartes);
     setNouvelles(new Set(tirage.filter((c) => !collection.cartes[c.id]).map((c) => c.id)));
@@ -151,7 +160,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
           onClick={() => setEtape("ferme")}
           className="cursor-pointer rounded-xl bg-accent px-8 py-3 font-display text-base font-bold text-black transition hover:brightness-110"
         >
-          Ouvrir un autre paquet
+          {attente > 0 ? `Prochain paquet dans ${formaterAttente(attente)}` : "Ouvrir un autre paquet"}
         </button>
       </div>
     );
@@ -224,13 +233,13 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
 
         {(etape === "ferme" || etape === "dechirure" || etape === "sortie") && (
           <div
-            className={`absolute inset-0 z-10 ${etape === "ferme" ? "pack-flotte" : ""} ${
+            className={`absolute inset-0 z-10 transition duration-500 ${etape === "ferme" && !bloque ? "pack-flotte" : ""} ${bloque ? "pointer-events-none opacity-50 grayscale" : ""} ${
               etape === "sortie" ? "pack-descend" : ""
             }`}
           >
             <button
               onClick={ouvrir}
-              disabled={etape !== "ferme"}
+              disabled={etape !== "ferme" || bloque}
               aria-label="Déchirer le booster"
               className="group absolute inset-0 drop-shadow-[0_0_28px_rgb(251_191_36/0.3)] enabled:cursor-pointer enabled:transition enabled:duration-500 enabled:hover:scale-[1.03]"
             >
@@ -338,12 +347,19 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
       <div className="flex min-h-20 flex-col items-center gap-3">
         {etape === "ferme" && (
           <>
-            <button
-              onClick={ouvrir}
-              className="cursor-pointer font-display text-xl font-bold text-accent transition hover:brightness-125"
-            >
-              Ouvrir
-            </button>
+            {bloque ? (
+              <p className="font-display text-xl font-bold text-white/60">
+                Prochain paquet dans{" "}
+                <span className="font-mono text-accent tabular-nums">{formaterAttente(attente)}</span>
+              </p>
+            ) : (
+              <button
+                onClick={ouvrir}
+                className="cursor-pointer font-display text-xl font-bold text-accent transition hover:brightness-125"
+              >
+                Ouvrir
+              </button>
+            )}
             <div className="mt-4 flex gap-6 rounded-2xl border border-bordure bg-panneau px-6 py-3 text-center">
               <div>
                 <p className="font-display text-lg font-bold">{collection.packs}</p>
