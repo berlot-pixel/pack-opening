@@ -56,6 +56,8 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   const [courante, setCourante] = useState(0);
   const [revelee, setRevelee] = useState(false);
   const [depart, setDepart] = useState(false);
+  // Objet vedette dessiné sur le booster : la première Ultra rare
+  const mascotte = cartes.find((c) => c.rarete === "ultra_rare") ?? cartes[0];
   const minuteurs = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   function plusTard(action: () => void, delai: number) {
@@ -218,52 +220,73 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
             >
               {/* Bande du haut, celle qu'on arrache (son bas suit la ligne de déchirure) */}
               <div
-                className={`absolute inset-x-0 top-0 h-12 rounded-t-lg border border-b-0 border-or/50 bg-gradient-to-b from-[#26221c] to-[#1c1915] transition duration-500 ${
+                className={`absolute inset-x-0 top-0 h-12 rounded-t-md bg-gradient-to-b from-[#e0213d] to-[#a1112a] shadow-[inset_6px_0_8px_rgb(255_255_255/0.2),inset_-6px_0_10px_rgb(0_0_0/0.35)] transition duration-500 ${
                   etape === "ferme" ? "group-hover:-translate-y-0.5 group-hover:rotate-1" : "bande-arrachee"
                 }`}
                 style={{ clipPath: DECOUPE_BANDE }}
               >
                 <div className="pack-sertissage absolute inset-x-0 top-0 h-3 rounded-t-md" />
                 {etape !== "ferme" && (
-                  <div className="absolute inset-0 bg-ivoire/70" style={{ clipPath: BORD_BANDE }} />
+                  <div className="absolute inset-0 bg-zinc-200/80" style={{ clipPath: BORD_BANDE }} />
                 )}
               </div>
 
               {/* Corps du paquet (son haut suit la même ligne de déchirure) */}
               <div
-                className={`absolute inset-x-0 top-10 bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-lg border border-t-0 border-or/50 bg-gradient-to-b from-[#1d1a16] via-[#12100e] to-[#0b0a09] ${
+                className={`absolute inset-x-0 top-10 bottom-0 overflow-hidden rounded-b-md bg-[radial-gradient(ellipse_at_50%_50%,#ffd76a_0%,#f0822a_20%,#c81d5e_42%,#4a1170_68%,#1a0b3a_100%)] shadow-[inset_6px_0_8px_rgb(255_255_255/0.2),inset_-6px_0_10px_rgb(0_0_0/0.45)] ${
                   etape === "dechirure" ? "pack-tremble" : ""
                 }`}
                 style={{ clipPath: DECOUPE_CORPS }}
               >
+                {/* Illustration : rayons d'énergie, éclairs et l'objet vedette de l'extension */}
+                <div className="booster-rayons" />
+                <svg className="booster-eclairs" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden>
+                  <polyline vectorEffect="non-scaling-stroke" points="6,30 20,52 12,56 28,80 20,83 36,112" />
+                  <polyline vectorEffect="non-scaling-stroke" points="96,26 82,50 90,54 74,78 82,82 68,108" />
+                  <polyline vectorEffect="non-scaling-stroke" points="40,44 46,56 41,58 50,72" />
+                </svg>
+                <div className="absolute inset-x-0 top-[33%] flex justify-center text-[84px] leading-none drop-shadow-[0_0_18px_rgb(255_215_106/0.9)] transition duration-500 -rotate-6 group-hover:scale-110 group-hover:-rotate-2">
+                  {mascotte?.emoji}
+                </div>
+
+                {/* Logo */}
+                <div className="absolute inset-x-0 top-3 flex flex-col items-center">
+                  <span className="logo-booster text-[36px]">Pack</span>
+                  <span className="logo-booster -mt-1 text-[27px]">Opening</span>
+                  <span className="mt-1.5 -skew-x-6 bg-[#b3122a] px-2 py-0.5 text-[8px] font-bold tracking-[0.15em] text-white uppercase shadow-md shadow-black/40">
+                    Cartes à collectionner
+                  </span>
+                </div>
+
+                {/* Nom de l'extension */}
+                <div className="absolute inset-x-0 bottom-11 flex flex-col items-center">
+                  <span className="titre-chrome text-[12px] tracking-[0.35em]">Édition</span>
+                  <span className="titre-chrome -mt-1 text-[32px]">Maison</span>
+                </div>
+
+                {/* Bande rouge sertie du bas */}
+                <div className="absolute inset-x-0 bottom-0 flex h-9 justify-center bg-gradient-to-b from-[#d21b36] to-[#8a0e21] pt-1.5">
+                  <span className="text-[8px] font-bold tracking-[0.2em] text-white/90 uppercase">
+                    5 cartes · 1 rare garantie
+                  </span>
+                  <div className="pack-sertissage absolute inset-x-0 bottom-0 h-3" />
+                </div>
+
+                <div className="booster-foil" />
+                <div className="pack-reflet" />
+
                 {etape === "ferme" ? (
-                  <div className="absolute inset-x-0 top-1 border-t border-dashed border-or/40" />
+                  <div className="absolute inset-x-0 top-1 border-t border-dashed border-white/50" />
                 ) : (
                   // Le bord déchiré apparaît de gauche à droite
                   <div className="dechirure-avance absolute inset-x-0 top-0 h-3">
-                    <div className="h-full bg-ivoire/70" style={{ clipPath: BORD_CORPS }} />
+                    <div className="h-full bg-zinc-200/80" style={{ clipPath: BORD_CORPS }} />
                   </div>
                 )}
-                <div className="pack-reflet" />
-                <div className="pack-sertissage absolute inset-x-0 bottom-0 h-3 rounded-b-md" />
-                <div className="absolute inset-x-3 top-4 bottom-5 rounded-sm border border-or/20" />
-
-                <span className="text-[9px] tracking-[0.4em] text-or/80 uppercase">Édition Maison</span>
-                <div className="my-1 flex size-20 items-center justify-center rounded-full border border-or/60 transition duration-500 group-hover:border-or">
-                  <div className="flex size-16 items-center justify-center rounded-full border border-or/25 font-serif text-4xl text-or-clair italic">
-                    P
-                  </div>
-                </div>
-                <span className="font-serif text-3xl tracking-wide text-ivoire">Booster</span>
-                <span className="-mt-2 font-serif text-sm text-white/55 italic">Objets de la maison</span>
-                <div className="h-px w-10 bg-or/50" />
-                <span className="text-[9px] tracking-[0.3em] text-white/45 uppercase">
-                  5 cartes · 1 rare garantie
-                </span>
               </div>
 
               {etape === "ferme" && (
-                <span className="absolute top-[30px] -left-3 text-sm text-or/80">✂</span>
+                <span className="absolute top-[30px] -left-3 text-sm text-white drop-shadow">✂</span>
               )}
               {etape !== "ferme" && (
                 <div className="pack-lumiere" style={{ top: HAUTEUR_BANDE - 20 }} />
