@@ -72,6 +72,10 @@ export function useAttentePack(): number {
   return Math.max(0, dernierPack + DELAI_ENTRE_PACKS - maintenant * 1000);
 }
 
+export function packDisponible() {
+  return lire().dernierPack + DELAI_ENTRE_PACKS <= Date.now();
+}
+
 export function ajouterPack(pack: Carte[]) {
   const actuel = lire();
   const cartes = { ...actuel.cartes };

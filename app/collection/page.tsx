@@ -14,7 +14,7 @@ export default async function PageCollection() {
         <h1 className="font-display text-4xl font-bold">Collection</h1>
         <p className="mt-2 text-sm text-white/60">Revends tes cartes pour gagner des coins</p>
       </div>
-      <Collection cartes={cartes} />
+      <Collection cartesMaison={cartes} />
     </div>
   );
 }

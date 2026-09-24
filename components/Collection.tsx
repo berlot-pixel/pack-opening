@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ORDRE_RARETES, RARETES, prixDeVente, type Carte, type Rarete } from "@/lib/cartes";
 import { gainDoublons, useCollection, vendreCarte, vendreDoublons } from "@/lib/collection";
+import { listerExtensions, type IdExtension } from "@/lib/extensions";
 import { CarteVisuelle } from "./CarteVisuelle";
 import { PieceCoin } from "./Navigation";
 
@@ -44,7 +45,10 @@ function BoutonVendre({ carte, nombre }: { carte: Carte; nombre: number }) {
   );
 }
 
-export function Collection({ cartes }: { cartes: Carte[] }) {
+export function Collection({ cartesMaison }: { cartesMaison: Carte[] }) {
+  const extensions = listerExtensions(cartesMaison);
+  const [idExtension, setIdExtension] = useState<IdExtension>("maison");
+  const cartes = extensions.find((e) => e.id === idExtension)!.cartes;
   const { cartes: possedees, packs } = useCollection();
   const trouvees = cartes.filter((c) => possedees[c.id]).length;
   const pourcentage = Math.round((trouvees / cartes.length) * 100);
@@ -52,6 +56,25 @@ export function Collection({ cartes }: { cartes: Carte[] }) {
 
   return (
     <div className="flex flex-col gap-10">
+      <div className="-mb-4 flex justify-center">
+        <div className="flex gap-1 rounded-xl border border-bordure bg-panneau p-1">
+          {extensions.map((e) => (
+            <button
+              key={e.id}
+              onClick={() => setIdExtension(e.id)}
+              className={`cursor-pointer rounded-lg px-5 py-2 font-display text-sm font-bold transition ${
+                e.id === idExtension ? "bg-accent/15 text-accent" : "text-white/60 hover:text-white"
+              }`}
+            >
+              {e.nom}
+              <span className="ml-2 text-xs font-medium opacity-60">
+                {e.cartes.filter((c) => possedees[c.id]).length}/{e.cartes.length}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
         <div className="rounded-2xl border border-bordure bg-panneau p-5">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-sm text-white/60">

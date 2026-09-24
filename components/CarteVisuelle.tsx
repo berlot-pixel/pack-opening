@@ -15,10 +15,31 @@ export function CarteVisuelle({ carte, badge }: { carte: Carte; badge?: string }
         <p className={`text-[9px] font-semibold tracking-[0.2em] uppercase ${rarete.texte}`}>
           {rarete.label}
         </p>
-        <div className="my-2 flex w-full flex-1 items-center justify-center rounded-md bg-[radial-gradient(closest-side,rgb(255_255_255/0.07),transparent)] text-5xl drop-shadow-[0_6px_10px_rgb(0_0_0/0.6)] sm:text-6xl">
-          {carte.emoji}
-        </div>
+        {carte.couleur ? (
+          // Joueur : maillot aux couleurs de son équipe
+          <div
+            className="my-2 flex w-full flex-1 items-center justify-center rounded-md"
+            style={{ background: `radial-gradient(closest-side, ${carte.couleur}66, transparent)` }}
+          >
+            <div
+              className="maillot flex aspect-[5/6] w-3/5 flex-col items-center justify-center pt-3 font-display drop-shadow-lg"
+              style={{ background: carte.couleur, color: carte.couleurTexte }}
+            >
+              <span className="text-[9px] font-bold tracking-widest opacity-80">{carte.sigle}</span>
+              <span className="text-3xl leading-none font-black sm:text-4xl">{carte.numero || "–"}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="my-2 flex w-full flex-1 items-center justify-center rounded-md bg-[radial-gradient(closest-side,rgb(255_255_255/0.07),transparent)] text-5xl drop-shadow-[0_6px_10px_rgb(0_0_0/0.6)] sm:text-6xl">
+            {carte.emoji}
+          </div>
+        )}
         <p className="font-display text-base leading-tight font-semibold text-white">{carte.nom}</p>
+        {carte.equipe && (
+          <p className="mt-0.5 text-[10px] leading-tight text-white/60">
+            {carte.equipe} · {carte.poste}
+          </p>
+        )}
         <div className={`my-1.5 h-px w-8 bg-current opacity-50 ${rarete.texte}`} />
         <p className="text-[10px] leading-snug text-white/50">{carte.description}</p>
       </div>

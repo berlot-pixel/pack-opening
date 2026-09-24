@@ -10,13 +10,8 @@ export default async function Accueil() {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className="text-center">
-        <h1 className="font-display text-4xl font-bold">Ouvrir un paquet</h1>
-        <p className="mt-2 text-sm text-white/60">
-          Découvre 5 nouvelles cartes parmi {cartes.length} objets de la maison
-        </p>
-      </div>
-      <OuvreurDePack cartes={cartes} />
+      <h1 className="font-display text-4xl font-bold">Ouvrir un paquet</h1>
+      <OuvreurDePack cartesMaison={cartes} />
     </div>
   );
 }

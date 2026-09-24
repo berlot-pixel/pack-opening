@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { prixDeVente, tirerPack, type Carte, type Rarete } from "@/lib/cartes";
-import { ajouterPack, DELAI_ENTRE_PACKS, useAttentePack, useCollection } from "@/lib/collection";
+import { ajouterPack, packDisponible, useAttentePack, useCollection } from "@/lib/collection";
+import { listerExtensions, type IdExtension } from "@/lib/extensions";
 import { CarteVisuelle, DosDeCarte } from "./CarteVisuelle";
+import { DECORS } from "./DecorsBooster";
 import { EVENEMENT_RETOUR_ACCUEIL } from "./LienAccueil";
 import { PieceCoin } from "./Navigation";
 
@@ -43,17 +45,6 @@ const DECOUPE_CORPS = `polygon(${pointsDechirure(0).join(", ")}, 100% 100%, 0 10
 const BORD_BANDE = `polygon(${pointsDechirure(HAUTEUR_BANDE - EPAISSEUR_BORD).join(", ")}, ${pointsDechirure(HAUTEUR_BANDE).reverse().join(", ")})`;
 const BORD_CORPS = `polygon(${pointsDechirure(0).join(", ")}, ${pointsDechirure(EPAISSEUR_BORD).reverse().join(", ")})`;
 
-// Petites maisons pastel éparpillées sur le booster : position (%), taille (px), angle, couleur
-const FORME_MAISON = "M12 2 1 11.5h3V22h6v-6h4v6h6V11.5h3Z";
-const MAISONS_PASTEL = [
-  { x: 34, y: -4, taille: 62, angle: 12, couleur: "#c4b5fd" },
-  { x: 72, y: 14, taille: 66, angle: -18, couleur: "#99f6e4" },
-  { x: -6, y: 30, taille: 60, angle: -24, couleur: "#fdba74" },
-  { x: 74, y: 56, taille: 60, angle: 20, couleur: "#fde68a" },
-  { x: -4, y: 68, taille: 64, angle: 14, couleur: "#93c5fd" },
-  { x: 60, y: 82, taille: 58, angle: -10, couleur: "#f9a8d4" },
-];
-
 // Petits morceaux d'emballage qui sautent pendant la déchirure : position (%), direction, taille
 const MORCEAUX = [
   { x: 8, dx: -30, taille: 5 },
@@ -66,7 +57,12 @@ const MORCEAUX = [
   { x: 93, dx: 18, taille: 4 },
 ];
 
-export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
+export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
+  const extensions = listerExtensions(cartesMaison);
+  const [idExtension, setIdExtension] = useState<IdExtension>("maison");
+  const extension = extensions.find((e) => e.id === idExtension)!;
+  const cartes = extension.cartes;
+  const decor = DECORS[idExtension];
   const collection = useCollection();
   const attente = useAttentePack();
   const [etape, setEtape] = useState<Etape>("ferme");
@@ -103,7 +99,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   }, []);
 
   function ouvrir() {
-    if (collection.dernierPack + DELAI_ENTRE_PACKS > Date.now()) return;
+    if (!packDisponible()) return;
     annulerMinuteurs();
     const tirage = tirerPack(cartes);
     setNouvelles(new Set(tirage.filter((c) => !collection.cartes[c.id]).map((c) => c.id)));
@@ -174,6 +170,25 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
 
   return (
     <div className="flex flex-col items-center gap-6">
+      {etape === "ferme" && (
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex gap-1 rounded-xl border border-bordure bg-panneau p-1">
+            {extensions.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => setIdExtension(e.id)}
+                className={`cursor-pointer rounded-lg px-5 py-2 font-display text-sm font-bold transition ${
+                  e.id === idExtension ? "bg-accent/15 text-accent" : "text-white/60 hover:text-white"
+                }`}
+              >
+                {e.nom}
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-white/60">Découvre 5 nouvelles cartes parmi {extension.description}</p>
+        </div>
+      )}
+
       <div className="relative mt-4 h-80 w-56">
         {(etape === "sortie" || etape === "pile") && (
           <div
@@ -245,7 +260,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
             >
               {/* Bande du haut, celle qu'on arrache (son bas suit la ligne de déchirure) */}
               <div
-                className={`absolute inset-x-0 top-0 booster-blanc h-12 rounded-t-md transition duration-500 ${
+                className={`absolute inset-x-0 top-0 ${decor.fond} h-12 rounded-t-md transition duration-500 ${
                   etape === "ferme" ? "group-hover:-translate-y-0.5 group-hover:rotate-1" : "bande-arrachee"
                 }`}
                 style={{ clipPath: DECOUPE_BANDE }}
@@ -258,56 +273,19 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
 
               {/* Corps du paquet (son haut suit la même ligne de déchirure) */}
               <div
-                className={`booster-blanc absolute inset-x-0 top-10 bottom-0 overflow-hidden rounded-b-md ${
+                className={`${decor.fond} absolute inset-x-0 top-10 bottom-0 overflow-hidden rounded-b-md ${
                   etape === "dechirure" ? "pack-tremble" : ""
                 }`}
                 style={{ clipPath: DECOUPE_CORPS }}
               >
-                {/* Petites maisons pastel éparpillées */}
-                {MAISONS_PASTEL.map((maison, i) => (
-                  <svg
-                    key={i}
-                    viewBox="0 0 24 24"
-                    className="absolute opacity-75"
-                    style={{
-                      left: `${maison.x}%`,
-                      top: `${maison.y}%`,
-                      width: maison.taille,
-                      rotate: `${maison.angle}deg`,
-                      fill: maison.couleur,
-                    }}
-                    aria-hidden
-                  >
-                    <path d={FORME_MAISON} />
-                  </svg>
-                ))}
-
-                {/* Logo : une maison noire au centre */}
-                <svg
-                  viewBox="0 0 64 64"
-                  className="absolute top-[45%] left-1/2 w-28 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_2px_3px_rgb(0_0_0/0.25)] transition duration-500 group-hover:scale-110"
-                  aria-hidden
-                >
-                  <path d="M32 5 3 30h8v27h42V30h8l-9-7.8V9h-7v7.2Z" fill="#111" />
-                  <text
-                    x="32"
-                    y="50"
-                    textAnchor="middle"
-                    fill="#fff"
-                    fontFamily="var(--font-outfit)"
-                    fontSize="22"
-                    fontWeight="800"
-                  >
-                    P
-                  </text>
-                </svg>
+                {decor.illustration}
 
                 <div className="pack-sertissage absolute inset-x-0 bottom-0 h-3" />
                 <div className="booster-foil" />
                 <div className="pack-reflet" />
 
                 {etape === "ferme" ? (
-                  <div className="absolute inset-x-0 top-1 border-t border-dashed border-black/15" />
+                  <div className={`absolute inset-x-0 top-1 border-t border-dashed ${decor.pointilles}`} />
                 ) : (
                   // Le bord déchiré apparaît de gauche à droite
                   <div className="dechirure-avance absolute inset-x-0 top-0 h-3">

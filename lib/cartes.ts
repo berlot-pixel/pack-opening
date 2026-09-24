@@ -6,6 +6,13 @@ export type Carte = {
   emoji: string;
   description: string;
   rarete: Rarete;
+  // Cartes de joueurs (extension NBA) : on dessine un maillot à la place de l'emoji
+  equipe?: string;
+  sigle?: string;
+  poste?: string;
+  numero?: string;
+  couleur?: string;
+  couleurTexte?: string;
 };
 
 export const ORDRE_RARETES: Rarete[] = ["ultra_rare", "epique", "rare", "peu_commun", "commun"];
