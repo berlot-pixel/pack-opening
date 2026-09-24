@@ -12,37 +12,46 @@ export const ORDRE_RARETES: Rarete[] = ["ultra_rare", "epique", "rare", "peu_com
 
 export const RARETES: Record<
   Rarete,
-  { label: string; classes: string; texte: string }
+  { label: string; classes: string; texte: string; prix: number }
 > = {
   // Chaque rareté a sa teinte de métal : pierre, vert-de-gris, saphir, améthyste, or
   commun: {
     label: "Commune",
     classes: "border-stone-600/70 bg-gradient-to-b from-[#1c1b19] to-[#0f0e0d]",
     texte: "text-stone-400",
+    prix: 5,
   },
   peu_commun: {
     label: "Peu commune",
     classes: "border-[#5f8a7c]/70 bg-gradient-to-b from-[#16201d] to-[#0e0f0e]",
     texte: "text-[#8fb5a8]",
+    prix: 15,
   },
   rare: {
     label: "Rare",
     classes:
       "border-[#6f8fb8]/80 bg-gradient-to-b from-[#161c27] to-[#0d0e11] shadow-lg shadow-[#6f8fb8]/10",
     texte: "text-[#a4bddc]",
+    prix: 40,
   },
   epique: {
     label: "Épique",
     classes:
       "border-[#9a7cc0]/80 bg-gradient-to-b from-[#1e1826] to-[#0e0d11] shadow-xl shadow-[#9a7cc0]/15",
     texte: "text-[#c4b0e0]",
+    prix: 120,
   },
   ultra_rare: {
     label: "Ultra rare",
     classes: "carte-doree border-or shadow-2xl shadow-or/25",
     texte: "text-or-clair",
+    prix: 400,
   },
 };
+
+// Prix de revente en coins : plus une carte est rare, plus elle rapporte
+// (un booster revendu en entier rapporte environ 130 coins en moyenne)
+export const prixDeVente = (carte: Carte) => RARETES[carte.rarete].prix;
 
 // Chances en % pour une carte normale, et pour la dernière carte du pack (garantie Rare ou mieux)
 const CHANCES_NORMALES: [Rarete, number][] = [

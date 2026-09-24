@@ -1,32 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0c0b0a;
-  --foreground: #ece6da;
+  --background: #212121;
+  --foreground: #f4f4f5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-ivoire: #ece6da;
+  --color-panneau: #1a1a1a;
+  --color-surface: #2a2a2a;
+  --color-bordure: #333333;
+  --color-accent: #34d399;
   --color-or: #c9a55c;
   --color-or-clair: #e6cf94;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-cormorant);
+  --font-display: var(--font-outfit);
 }
 
 body {
-  background: radial-gradient(ellipse at top, #1f1b14 0%, var(--background) 55%) fixed;
+  background: var(--background);
   color: var(--foreground);
 }
 
-/* Motif du dos des cartes : fin quadrillage de losanges dorés */
+/* Le solde de coins rebondit quand il change */
+.solde-pop {
+  animation: solde-pop 0.4s ease-out;
+}
+@keyframes solde-pop {
+  40% { transform: scale(1.25); }
+}
+
+/* Motif du dos des cartes : fin quadrillage de losanges verts */
 .dos-motif {
   background:
-    repeating-linear-gradient(45deg, rgb(201 165 92 / 0.12) 0 1px, transparent 1px 10px),
-    repeating-linear-gradient(-45deg, rgb(201 165 92 / 0.12) 0 1px, transparent 1px 10px),
-    linear-gradient(160deg, #1d1a16, #0e0d0b);
+    repeating-linear-gradient(45deg, rgb(52 211 153 / 0.1) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(-45deg, rgb(52 211 153 / 0.1) 0 1px, transparent 1px 10px),
+    linear-gradient(160deg, #2c2c2c, #1a1a1a);
 }
 
 /* Carte qui se retourne */

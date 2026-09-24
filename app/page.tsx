@@ -9,14 +9,11 @@ export default async function Accueil() {
   if (erreur) return <ErreurCartes message={erreur} />;
 
   return (
-    <div className="flex flex-col items-center gap-10">
+    <div className="flex flex-col items-center gap-6">
       <div className="text-center">
-        <p className="mb-3 text-[11px] tracking-[0.35em] text-or uppercase">Édition Maison</p>
-        <h1 className="font-serif text-5xl font-normal text-ivoire sm:text-6xl">
-          Ouvre un <span className="text-or-clair italic">booster</span>
-        </h1>
-        <p className="mt-4 text-sm text-white/50">
-          {cartes.length} objets du quotidien à collectionner, de la Commune à l&apos;Ultra rare.
+        <h1 className="font-display text-4xl font-bold">Ouvrir un paquet</h1>
+        <p className="mt-2 text-sm text-white/60">
+          Découvre 5 nouvelles cartes parmi {cartes.length} objets de la maison
         </p>
       </div>
       <OuvreurDePack cartes={cartes} />

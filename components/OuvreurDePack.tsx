@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { tirerPack, type Carte, type Rarete } from "@/lib/cartes";
+import { prixDeVente, tirerPack, type Carte, type Rarete } from "@/lib/cartes";
 import { ajouterPack, useCollection } from "@/lib/collection";
 import { CarteVisuelle, DosDeCarte } from "./CarteVisuelle";
 import { EVENEMENT_RETOUR_ACCUEIL } from "./LienAccueil";
+import { PieceCoin } from "./Navigation";
 
 // ferme → dechirure (la bande du haut s'arrache) → sortie (les cartes sortent du paquet)
 // → pile (on retourne les cartes une par une) → resume (toutes les cartes du pack)
@@ -117,9 +118,16 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   if (etape === "resume") {
     return (
       <div className="flex w-full flex-col items-center gap-8">
-        <h2 className="font-serif text-4xl text-ivoire">
-          Ton <span className="text-or-clair italic">tirage</span>
-        </h2>
+        <div className="text-center">
+          <h2 className="font-display text-3xl font-bold">Ton tirage</h2>
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-white/60">
+            Valeur à la revente :
+            <span className="font-semibold text-accent">
+              {pack.reduce((total, carte) => total + prixDeVente(carte), 0)}
+            </span>
+            <PieceCoin className="size-3.5" />
+          </p>
+        </div>
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {pack.map((carte, i) => (
             <div key={i} className="carte-arrive" style={{ animationDelay: `${i * 100}ms` }}>
@@ -132,9 +140,9 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
         </div>
         <button
           onClick={() => setEtape("ferme")}
-          className="cursor-pointer border border-or/70 px-8 py-3 text-[11px] tracking-[0.3em] text-or-clair uppercase transition hover:bg-or hover:text-[#0c0b0a]"
+          className="cursor-pointer rounded-xl bg-accent px-8 py-3 font-display text-base font-bold text-black transition hover:brightness-110"
         >
-          Ouvrir un autre booster
+          Ouvrir un autre paquet
         </button>
       </div>
     );
@@ -144,7 +152,6 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
   const halo = etape === "pile" && revelee ? HALOS[carteDessus.rarete] : undefined;
 
   let aide = "";
-  if (etape === "ferme") aide = "Touche le booster pour le déchirer";
   if (etape === "pile") aide = revelee ? "Clique pour la carte suivante" : "Clique pour retourner la carte";
 
   return (
@@ -216,7 +223,7 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
               onClick={ouvrir}
               disabled={etape !== "ferme"}
               aria-label="Déchirer le booster"
-              className="group absolute inset-0 drop-shadow-[0_25px_40px_rgb(0_0_0/0.7)] enabled:cursor-pointer enabled:transition enabled:duration-500 enabled:hover:scale-[1.03]"
+              className="group absolute inset-0 drop-shadow-[0_0_28px_rgb(251_191_36/0.3)] enabled:cursor-pointer enabled:transition enabled:duration-500 enabled:hover:scale-[1.03]"
             >
               {/* Bande du haut, celle qu'on arrache (son bas suit la ligne de déchirure) */}
               <div
@@ -314,16 +321,41 @@ export function OuvreurDePack({ cartes }: { cartes: Carte[] }) {
       </div>
 
       <div className="flex min-h-20 flex-col items-center gap-3">
+        {etape === "ferme" && (
+          <>
+            <button
+              onClick={ouvrir}
+              className="cursor-pointer font-display text-xl font-bold text-accent transition hover:brightness-125"
+            >
+              Ouvrir
+            </button>
+            <div className="mt-4 flex gap-6 rounded-2xl border border-bordure bg-panneau px-6 py-3 text-center">
+              <div>
+                <p className="font-display text-lg font-bold">{collection.packs}</p>
+                <p className="text-xs text-white/50">paquets ouverts</p>
+              </div>
+              <div>
+                <p className="font-display text-lg font-bold">
+                  <span className="text-accent">
+                    {cartes.filter((c) => collection.cartes[c.id]).length}
+                  </span>{" "}
+                  / {cartes.length}
+                </p>
+                <p className="text-xs text-white/50">cartes trouvées</p>
+              </div>
+            </div>
+          </>
+        )}
         {etape === "pile" && (
-          <p className="font-serif text-xl text-or-clair">
-            {courante + 1} <span className="text-white/30">/ {pack.length}</span>
+          <p className="font-display text-xl font-bold">
+            <span className="text-accent">{courante + 1}</span> / {pack.length}
           </p>
         )}
-        <p className="text-[11px] tracking-[0.25em] text-white/45 uppercase">{aide}</p>
+        {aide && <p className="text-sm text-white/50">{aide}</p>}
         {etape === "pile" && (
           <button
             onClick={() => setEtape("resume")}
-            className="cursor-pointer border-b border-white/20 pb-0.5 text-[11px] tracking-[0.2em] text-white/40 uppercase transition hover:border-or hover:text-or-clair"
+            className="cursor-pointer text-xs text-accent/80 transition hover:text-accent"
           >
             Tout voir d&apos;un coup
           </button>
