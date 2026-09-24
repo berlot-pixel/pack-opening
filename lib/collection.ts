@@ -6,15 +6,17 @@ export type Sauvegarde = {
   cartes: Record<number, number>;
   packs: number;
   coins: number;
-  dernierPack: number; // date d'ouverture du dernier paquet (en ms), 0 si jamais
+  stock: number; // paquets disponibles au moment de majStock
+  majStock: number; // date (en ms) à partir de laquelle on compte la recharge
 };
 
-// On peut ouvrir un paquet toutes les 5 minutes
-export const DELAI_ENTRE_PACKS = 5 * 60 * 1000;
+// Jusqu'à 10 paquets en réserve, 1 paquet de plus toutes les 5 minutes
+export const STOCK_MAX = 10;
+export const DELAI_RECHARGE = 5 * 60 * 1000;
 
 const CLE = "pack-opening:collection";
 const EVENEMENT = "pack-opening:maj";
-const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0, dernierPack: 0 };
+const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0, stock: STOCK_MAX, majStock: 0 };
 
 let etat: Sauvegarde | null = null;
 
@@ -64,23 +66,42 @@ function sAbonnerHorloge(callback: () => void) {
 }
 const secondeActuelle = () => Math.floor(Date.now() / 1000);
 
-// Millisecondes restantes avant de pouvoir ouvrir le prochain paquet (0 = disponible)
-export function useAttentePack(): number {
-  const { dernierPack } = useCollection();
+// Stock réel à un instant donné : on ajoute les paquets rechargés depuis majStock
+function calculerStock({ stock, majStock }: Sauvegarde, maintenant: number) {
+  if (stock >= STOCK_MAX) return { disponibles: STOCK_MAX, depuis: maintenant, attente: 0 };
+  const recharges = Math.floor((maintenant - majStock) / DELAI_RECHARGE);
+  const disponibles = Math.min(STOCK_MAX, stock + recharges);
+  if (disponibles >= STOCK_MAX) return { disponibles, depuis: maintenant, attente: 0 };
+  // On garde la progression vers le paquet suivant
+  const depuis = majStock + recharges * DELAI_RECHARGE;
+  return { disponibles, depuis, attente: depuis + DELAI_RECHARGE - maintenant };
+}
+
+// Paquets disponibles et millisecondes avant le prochain (attente = 0 si le stock est plein)
+export function useStockPacks(): { disponibles: number; attente: number } {
+  const sauvegarde = useCollection();
   const maintenant = useSyncExternalStore(sAbonnerHorloge, secondeActuelle, () => 0);
-  if (!dernierPack || !maintenant) return 0;
-  return Math.max(0, dernierPack + DELAI_ENTRE_PACKS - maintenant * 1000);
+  if (!maintenant) return { disponibles: Math.min(sauvegarde.stock, STOCK_MAX), attente: 0 };
+  const { disponibles, attente } = calculerStock(sauvegarde, maintenant * 1000);
+  return { disponibles, attente };
 }
 
 export function packDisponible() {
-  return lire().dernierPack + DELAI_ENTRE_PACKS <= Date.now();
+  return calculerStock(lire(), Date.now()).disponibles > 0;
 }
 
 export function ajouterPack(pack: Carte[]) {
   const actuel = lire();
   const cartes = { ...actuel.cartes };
   for (const carte of pack) cartes[carte.id] = (cartes[carte.id] ?? 0) + 1;
-  enregistrer({ ...actuel, cartes, packs: actuel.packs + 1, dernierPack: Date.now() });
+  const { disponibles, depuis } = calculerStock(actuel, Date.now());
+  enregistrer({
+    ...actuel,
+    cartes,
+    packs: actuel.packs + 1,
+    stock: Math.max(0, disponibles - 1),
+    majStock: depuis,
+  });
 }
 
 // Vend un exemplaire de la carte (si c'était le dernier, elle quitte la collection)

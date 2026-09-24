@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { prixDeVente, tirerPack, type Carte, type Rarete } from "@/lib/cartes";
-import { ajouterPack, packDisponible, useAttentePack, useCollection } from "@/lib/collection";
+import { ajouterPack, packDisponible, STOCK_MAX, useCollection, useStockPacks } from "@/lib/collection";
 import { listerExtensions, type IdExtension } from "@/lib/extensions";
 import { CarteVisuelle, DosDeCarte } from "./CarteVisuelle";
 import { DECORS } from "./DecorsBooster";
@@ -64,9 +64,9 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
   const cartes = extension.cartes;
   const decor = DECORS[idExtension];
   const collection = useCollection();
-  const attente = useAttentePack();
+  const { disponibles, attente } = useStockPacks();
   const [etape, setEtape] = useState<Etape>("ferme");
-  const bloque = etape === "ferme" && attente > 0;
+  const bloque = etape === "ferme" && disponibles === 0;
   const [pack, setPack] = useState<Carte[]>([]);
   const [nouvelles, setNouvelles] = useState<Set<number>>(new Set());
   const [courante, setCourante] = useState(0);
@@ -156,7 +156,7 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
           onClick={() => setEtape("ferme")}
           className="cursor-pointer rounded-xl bg-accent px-8 py-3 font-display text-base font-bold text-black transition hover:brightness-110"
         >
-          {attente > 0 ? `Prochain paquet dans ${formaterAttente(attente)}` : "Ouvrir un autre paquet"}
+          {disponibles > 0 ? "Ouvrir un autre paquet" : `Prochain paquet dans ${formaterAttente(attente)}`}
         </button>
       </div>
     );
@@ -340,8 +340,16 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
             )}
             <div className="mt-4 flex gap-6 rounded-2xl border border-bordure bg-panneau px-6 py-3 text-center">
               <div>
-                <p className="font-display text-lg font-bold">{collection.packs}</p>
-                <p className="text-xs text-white/50">paquets ouverts</p>
+                <p className="font-display text-lg font-bold">
+                  <span className="text-accent">{disponibles}</span> / {STOCK_MAX}
+                </p>
+                <p className="text-xs text-white/50">paquets disponibles</p>
+                {attente > 0 && (
+                  <p className="text-xs text-white/50">
+                    Prochain dans{" "}
+                    <span className="font-mono text-accent tabular-nums">{formaterAttente(attente)}</span>
+                  </p>
+                )}
               </div>
               <div>
                 <p className="font-display text-lg font-bold">
