@@ -63,6 +63,8 @@ function traduire(message: string) {
   if (m.includes("email not confirmed"))
     return "Confirme d'abord ton adresse mail avec le lien reçu par mail.";
   if (m.includes("password should be at least")) return "Le mot de passe doit faire au moins 6 caractères.";
+  if (m.includes("signups are disabled") || m.includes("logins are disabled"))
+    return "Les comptes par mail sont désactivés dans Supabase (Authentication → Sign In / Providers → Email).";
   if (m.includes("rate limit")) return "Trop de tentatives en peu de temps, réessaie dans quelques minutes.";
   if (m.includes("invalid") && m.includes("email")) return "Cette adresse mail n'est pas valide.";
   if (m.includes("database error saving new user")) return "Ce pseudo vient d'être pris, choisis-en un autre.";
