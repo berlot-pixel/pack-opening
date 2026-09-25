@@ -24,6 +24,15 @@ function IconeCollection() {
   );
 }
 
+function IconeCatalogue() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
+    </svg>
+  );
+}
+
 function IconeEchanges() {
   return (
     <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -116,6 +125,7 @@ export function Navigation() {
     { label: "Paquets", href: "/", icone: <IconePaquet /> },
     { label: "Collection", href: "/collection", icone: <IconeCollection /> },
     { label: "Échanges", href: "/echanges", icone: <IconeEchanges /> },
+    { label: "Toutes les cartes", href: "/cartes", icone: <IconeCatalogue /> },
     { label: "Amis", href: "/amis", icone: <IconeAmis /> },
     { label: "Compte", href: "/connexion", icone: <IconeCompte />, telephoneSeulement: true },
   ];
@@ -154,10 +164,13 @@ export function Navigation() {
         <BlocCompte />
       </aside>
 
-      {/* Téléphone : barre du haut */}
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-bordure bg-panneau/95 px-4 py-3 backdrop-blur md:hidden">
-        <Logo />
-        <div className="flex items-center gap-1">
+      {/* Téléphone : logo et coins, puis une rangée d'icônes */}
+      <header className="sticky top-0 z-20 flex flex-col gap-2 border-b border-bordure bg-panneau/95 px-4 pt-3 pb-2 backdrop-blur md:hidden">
+        <div className="flex items-center justify-between">
+          <Logo />
+          <Solde />
+        </div>
+        <nav className="flex justify-between">
           {liens.map((lien) => {
             const actif = chemin === lien.href;
             const classes = `rounded-lg p-2 transition ${actif ? "bg-accent/10 text-accent" : "text-white/70"}`;
@@ -167,16 +180,13 @@ export function Navigation() {
                 <span className="sr-only">{lien.label}</span>
               </LienAccueil>
             ) : (
-              <Link key={lien.href} href={lien.href} className={classes}>
+              <Link key={lien.href} href={lien.href} className={classes} title={lien.label}>
                 {lien.icone}
                 <span className="sr-only">{lien.label}</span>
               </Link>
             );
           })}
-          <div className="ml-2">
-            <Solde />
-          </div>
-        </div>
+        </nav>
       </header>
     </>
   );
