@@ -59,6 +59,10 @@ const EPINGLE = (
   />
 );
 
+const PIECE_PUZZLE = (
+  <path d="M9 3.5a2.5 2.5 0 0 1 5 0V5h4a1 1 0 0 1 1 1v4h-1.5a2.5 2.5 0 0 0 0 5H19v4a1 1 0 0 1-1 1h-4v-1.5a2.5 2.5 0 0 0-5 0V20H5a1 1 0 0 1-1-1v-4h1.5a2.5 2.5 0 0 0 0-5H4V6a1 1 0 0 1 1-1h4Z" />
+);
+
 export type DecorBooster = {
   fond: string; // classe CSS de l'emballage
   pointilles: string; // ligne de déchirure en pointillés
@@ -101,6 +105,25 @@ export const DECORS: Record<IdExtension, DecorBooster> = {
           </svg>
           <span className="font-display text-2xl font-black tracking-widest text-white">NBA</span>
         </div>
+      </>
+    ),
+  },
+  // Booster blanc, pièces de puzzle pastel, pièce noire « W » au centre
+  wikipedia: {
+    fond: "booster-blanc",
+    pointilles: "border-black/15",
+    illustration: (
+      <>
+        <FormesEparpillees
+          formes={colorer(["#c4b5fd", "#99f6e4", "#fdba74", "#fde68a", "#93c5fd", "#f9a8d4"])}
+          dessin={PIECE_PUZZLE}
+        />
+        <svg viewBox="0 0 24 24" className={`${CLASSES_LOGO} w-28 drop-shadow-[0_2px_3px_rgb(0_0_0/0.25)]`} aria-hidden>
+          <g fill="#111">{PIECE_PUZZLE}</g>
+          <text x="11.5" y="15.6" textAnchor="middle" fill="#fff" fontFamily="var(--font-outfit)" fontSize="8" fontWeight="800">
+            W
+          </text>
+        </svg>
       </>
     ),
   },

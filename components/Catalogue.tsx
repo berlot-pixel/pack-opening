@@ -18,8 +18,11 @@ const PUCE = (actif: boolean) =>
 const PAR_TRANCHE = 60;
 
 export function Catalogue({ cartesMaison }: { cartesMaison: Carte[] }) {
-  const extensions = useMemo(() => listerExtensions(cartesMaison), [cartesMaison]);
-  const { cartes: possedees } = useCollection();
+  const { cartes: possedees, wiki } = useCollection();
+  const extensions = useMemo(
+    () => listerExtensions(cartesMaison, Object.values(wiki).filter((c) => possedees[c.id])),
+    [cartesMaison, wiki, possedees],
+  );
   const [idExtension, setIdExtension] = useState<IdExtension>("maison");
   const [rarete, setRarete] = useState<Rarete | "toutes">("toutes");
   const [filtre, setFiltre] = useState<Filtre>("toutes");
@@ -69,7 +72,7 @@ export function Catalogue({ cartesMaison }: { cartesMaison: Carte[] }) {
               }`}
             >
               {e.nom}
-              <span className="ml-2 text-xs font-medium opacity-60">{e.cartes.length}</span>
+              <span className="ml-2 text-xs font-medium opacity-60">{e.infinie ? "∞" : e.cartes.length}</span>
             </button>
           ))}
         </div>
@@ -82,6 +85,8 @@ export function Catalogue({ cartesMaison }: { cartesMaison: Carte[] }) {
           placeholder={
             idExtension === "nba"
               ? "Rechercher un joueur ou une équipe"
+              : idExtension === "wikipedia"
+                ? "Rechercher une page découverte"
               : idExtension === "france"
                 ? "Rechercher une ville ou un département"
                 : "Rechercher un objet"
@@ -108,8 +113,17 @@ export function Catalogue({ cartesMaison }: { cartesMaison: Carte[] }) {
           </div>
         </div>
         <p className="text-xs text-white/45">
-          {liste.length} carte{liste.length > 1 ? "s" : ""} · tu en as obtenu{" "}
-          <span className="font-semibold text-accent">{obtenues}</span> sur {extension.cartes.length}
+          {extension.infinie ? (
+            <>
+              Collection infinie : n&apos;importe quelle page de Wikipédia peut sortir d&apos;un paquet. Voici les{" "}
+              <span className="font-semibold text-accent">{obtenues}</span> que tu as découvertes.
+            </>
+          ) : (
+            <>
+              {liste.length} carte{liste.length > 1 ? "s" : ""} · tu en as obtenu{" "}
+              <span className="font-semibold text-accent">{obtenues}</span> sur {extension.cartes.length}
+            </>
+          )}
         </p>
       </div>
 
@@ -125,7 +139,15 @@ export function Catalogue({ cartesMaison }: { cartesMaison: Carte[] }) {
                   <CarteVisuelle carte={carte} badge={nombre > 1 ? `x${nombre}` : undefined} />
                 </div>
                 <p className="flex items-center justify-center gap-1 text-[11px] text-white/45">
-                  {nombre ? <span className="font-semibold text-accent">Obtenue</span> : "Pas encore obtenue"}
+                  {carte.lien ? (
+                    <a href={carte.lien} target="_blank" rel="noreferrer" className="font-semibold text-accent hover:underline">
+                      Lire sur Wikipédia
+                    </a>
+                  ) : nombre ? (
+                    <span className="font-semibold text-accent">Obtenue</span>
+                  ) : (
+                    "Pas encore obtenue"
+                  )}
                   <span>·</span>
                   {RARETES[carte.rarete].prix}
                   <PieceCoin className="size-3" />

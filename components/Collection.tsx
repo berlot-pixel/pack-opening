@@ -46,12 +46,16 @@ function BoutonVendre({ carte, nombre }: { carte: Carte; nombre: number }) {
 }
 
 export function Collection({ cartesMaison }: { cartesMaison: Carte[] }) {
-  const extensions = listerExtensions(cartesMaison);
+  const { cartes: possedees, packs, wiki } = useCollection();
+  const extensions = listerExtensions(
+    cartesMaison,
+    Object.values(wiki).filter((c) => possedees[c.id]),
+  );
   const [idExtension, setIdExtension] = useState<IdExtension>("maison");
-  const cartes = extensions.find((e) => e.id === idExtension)!.cartes;
-  const { cartes: possedees, packs } = useCollection();
+  const extension = extensions.find((e) => e.id === idExtension)!;
+  const cartes = extension.cartes;
   const trouvees = cartes.filter((c) => possedees[c.id]).length;
-  const pourcentage = Math.round((trouvees / cartes.length) * 100);
+  const pourcentage = cartes.length ? Math.round((trouvees / cartes.length) * 100) : 0;
   const gain = gainDoublons(cartes, possedees);
 
   return (
@@ -68,7 +72,8 @@ export function Collection({ cartesMaison }: { cartesMaison: Carte[] }) {
             >
               {e.nom}
               <span className="ml-2 text-xs font-medium opacity-60">
-                {e.cartes.filter((c) => possedees[c.id]).length}/{e.cartes.length}
+                {e.cartes.filter((c) => possedees[c.id]).length}
+                {!e.infinie && `/${e.cartes.length}`}
               </span>
             </button>
           ))}
@@ -81,15 +86,19 @@ export function Collection({ cartesMaison }: { cartesMaison: Carte[] }) {
             <span>
               <span className="mr-1.5 font-display text-2xl font-bold text-white">
                 {trouvees}
-                <span className="text-white/40"> / {cartes.length}</span>
+                {!extension.infinie && <span className="text-white/40"> / {cartes.length}</span>}
               </span>
-              cartes trouvées
+              {extension.infinie ? "pages Wikipédia découvertes" : "cartes trouvées"}
             </span>
             <span>{packs} paquets ouverts</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-surface">
-            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pourcentage}%` }} />
-          </div>
+          {extension.infinie ? (
+            <p className="text-xs text-white/40">Collection infinie : chaque paquet peut contenir n&apos;importe quelle page.</p>
+          ) : (
+            <div className="h-2 overflow-hidden rounded-full bg-surface">
+              <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pourcentage}%` }} />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-bordure bg-panneau p-5">

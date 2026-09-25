@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { prixDeVente, type Carte } from "./cartes";
 import { supabase } from "./supabase";
+import { estCarteWiki } from "./wikipedia";
 
 // Collection, coins et stock de paquets.
 // Sans compte : sauvegardés dans le navigateur. Avec un compte : enregistrés dans Supabase
@@ -11,6 +12,7 @@ export type Sauvegarde = {
   coins: number;
   stock: number; // paquets disponibles au moment de majStock
   majStock: number; // date (en ms) à partir de laquelle on compte la recharge
+  wiki: Record<number, Carte>; // pages Wikipédia obtenues (titre, image, rareté…)
 };
 
 // Jusqu'à 10 paquets en réserve, 1 paquet de plus toutes les 5 minutes
@@ -19,7 +21,7 @@ export const DELAI_RECHARGE = 5 * 60 * 1000;
 
 const CLE = "pack-opening:collection";
 const EVENEMENT = "pack-opening:maj";
-const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0, stock: STOCK_MAX, majStock: 0 };
+const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0, stock: STOCK_MAX, majStock: 0, wiki: {} };
 
 let etat: Sauvegarde | null = null;
 let joueur: string | null = null; // id du compte connecté, null sans compte
@@ -72,6 +74,35 @@ function sAbonner(callback: () => void) {
   };
 }
 
+// ---------- Pages Wikipédia découvertes (table cartes_wiki) ----------
+
+// Retrouve les cartes Wikipédia à partir de leurs identifiants (par paquets de 100)
+export async function chargerCartesWiki(ids: number[]): Promise<Record<number, Carte>> {
+  const cartes: Record<number, Carte> = {};
+  const aChercher = [...new Set(ids.filter(estCarteWiki))];
+  if (!supabase || aChercher.length === 0) return cartes;
+  for (let i = 0; i < aChercher.length; i += 100) {
+    const { data } = await supabase
+      .from("cartes_wiki")
+      .select("id, carte")
+      .in("id", aChercher.slice(i, i + 100))
+      .returns<{ id: number; carte: Carte }[]>();
+    for (const ligne of data ?? []) cartes[ligne.id] = ligne.carte;
+  }
+  return cartes;
+}
+
+function memoriserCartesWiki(cartes: Carte[]) {
+  if (!supabase || !joueur || cartes.length === 0) return;
+  supabase
+    .from("cartes_wiki")
+    .upsert(
+      cartes.map((carte) => ({ id: carte.id, carte })),
+      { onConflict: "id", ignoreDuplicates: true },
+    )
+    .then(() => {});
+}
+
 // ---------- Synchronisation avec le compte ----------
 
 type LigneJoueur = { coins: number; packs: number; stock: number; maj_stock: string };
@@ -97,6 +128,7 @@ export async function synchroniser() {
       p_maj_stock: new Date(local.majStock || Date.now()).toISOString(),
     });
     if (error) return; // script supabase/echanges.sql pas encore lancé : on reste sur la copie locale
+    memoriserCartesWiki(Object.values(local.wiki ?? {}));
     ({ data: infos } = await supabase
       .from("joueurs")
       .select("coins, packs, stock, maj_stock")
@@ -111,7 +143,14 @@ export async function synchroniser() {
     .returns<{ carte_id: number; nombre: number }[]>();
   if (!infos || !lignes || joueur !== id) return;
 
+  // Pages Wikipédia : on garde celles déjà connues ici et on va chercher les autres
+  const connues = lire().wiki;
+  const inconnues = lignes.map((l) => l.carte_id).filter((c) => estCarteWiki(c) && !connues[c]);
+  const wiki = { ...connues, ...(await chargerCartesWiki(inconnues)) };
+  if (joueur !== id) return;
+
   enregistrer({
+    wiki,
     cartes: Object.fromEntries(lignes.map((l) => [l.carte_id, l.nombre])),
     coins: infos.coins,
     packs: infos.packs,
@@ -183,14 +222,19 @@ export function ajouterPack(pack: Carte[]) {
   const actuel = lire();
   const cartes = { ...actuel.cartes };
   for (const carte of pack) cartes[carte.id] = (cartes[carte.id] ?? 0) + 1;
+  const nouvellesWiki = pack.filter((c) => estCarteWiki(c.id));
+  const wiki = { ...actuel.wiki };
+  for (const carte of nouvellesWiki) wiki[carte.id] ??= carte;
   const { disponibles, depuis } = calculerStock(actuel, Date.now());
   enregistrer({
     ...actuel,
     cartes,
     packs: actuel.packs + 1,
+    wiki,
     stock: Math.max(0, disponibles - 1),
     majStock: depuis,
   });
+  memoriserCartesWiki(nouvellesWiki);
   envoyer("ouvrir_paquet", { p_cartes: pack.map((c) => c.id) });
 }
 

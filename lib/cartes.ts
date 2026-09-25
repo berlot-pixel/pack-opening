@@ -6,8 +6,11 @@ export type Carte = {
   emoji: string;
   description: string;
   rarete: Rarete;
-  // Cartes de joueurs (NBA) ou de villes : on dessine un maillot ou un blason à la place de l'emoji
-  visuel?: "maillot" | "blason";
+  // Cartes de joueurs (NBA), de villes ou de pages Wikipédia : maillot, blason ou image à la place de l'emoji
+  visuel?: "maillot" | "blason" | "wiki";
+  image?: string;
+  lien?: string;
+  vues?: number; // vues par jour (pages Wikipédia)
   equipe?: string;
   sigle?: string;
   poste?: string;

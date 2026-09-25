@@ -15,7 +15,23 @@ export function CarteVisuelle({ carte, badge }: { carte: Carte; badge?: string }
         <p className={`text-[9px] font-semibold tracking-[0.2em] uppercase ${rarete.texte}`}>
           {rarete.label}
         </p>
-        {carte.visuel === "blason" ? (
+        {carte.visuel === "wiki" ? (
+          // Page Wikipédia : l'image de la page (ou un grand W s'il n'y en a pas)
+          <div className="relative my-2 flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden rounded-md bg-white/[0.04]">
+            {carte.image ? (
+              // eslint-disable-next-line @next/next/no-img-element -- miniatures servies par Wikimedia
+              <img
+                src={carte.image}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <span className="font-display text-5xl font-black text-white/20">W</span>
+            )}
+          </div>
+        ) : carte.visuel === "blason" ? (
           // Ville : blason aux couleurs de sa région, avec le numéro du département
           <div
             className="my-2 flex w-full flex-1 items-center justify-center rounded-md"
@@ -53,14 +69,19 @@ export function CarteVisuelle({ carte, badge }: { carte: Carte; badge?: string }
             {carte.emoji}
           </div>
         )}
-        <p className="font-display text-base leading-tight font-semibold text-white">{carte.nom}</p>
+        <p className="line-clamp-2 font-display text-base leading-tight font-semibold text-white">{carte.nom}</p>
         {carte.equipe && (
           <p className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-white/60">
             {carte.visuel === "blason" ? carte.poste : `${carte.equipe} · ${carte.poste}`}
           </p>
         )}
         <div className={`my-1.5 h-px w-8 bg-current opacity-50 ${rarete.texte}`} />
-        <p className="text-[10px] leading-snug text-white/50">{carte.description}</p>
+        <p className="line-clamp-2 text-[10px] leading-snug text-white/50">{carte.description}</p>
+        {carte.vues !== undefined && (
+          <p className="mt-0.5 text-[10px] text-white/35">
+            {carte.vues.toLocaleString("fr-FR")} vue{carte.vues > 1 ? "s" : ""}/jour
+          </p>
+        )}
       </div>
     </div>
   );

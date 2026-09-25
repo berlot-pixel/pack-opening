@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { chargerRelations } from "@/lib/amis";
 import { ORDRE_RARETES, RARETES, type Carte } from "@/lib/cartes";
-import { synchroniser, useCollection } from "@/lib/collection";
+import { chargerCartesWiki, synchroniser, useCollection } from "@/lib/collection";
 import { useCompte, type Profil } from "@/lib/compte";
 import {
   accepterEchange,
@@ -176,7 +176,12 @@ export function Echanges({ cartesMaison }: { cartesMaison: Carte[] }) {
   const monId = profil?.id;
   const maCollection = useCollection();
 
-  const catalogue = useMemo(() => listerExtensions(cartesMaison), [cartesMaison]);
+  // Pages Wikipédia des amis et des échanges, que ma collection ne connaît pas encore
+  const [wikiEnPlus, setWikiEnPlus] = useState<Record<number, Carte>>({});
+  const catalogue = useMemo(
+    () => listerExtensions(cartesMaison, Object.values({ ...wikiEnPlus, ...maCollection.wiki })),
+    [cartesMaison, wikiEnPlus, maCollection.wiki],
+  );
   const parId = useMemo(
     () => new Map(catalogue.flatMap((e) => e.cartes).map((c) => [c.id, c] as const)),
     [catalogue],
@@ -191,13 +196,19 @@ export function Echanges({ cartesMaison }: { cartesMaison: Carte[] }) {
   const [retour, setRetour] = useState<{ erreur?: string; message?: string }>({});
   const [envoi, setEnvoi] = useState(false);
 
+  const completerWiki = useCallback(async (ids: number[]) => {
+    const trouvees = await chargerCartesWiki(ids);
+    if (Object.keys(trouvees).length) setWikiEnPlus((avant) => ({ ...avant, ...trouvees }));
+  }, []);
+
   const recharger = useCallback(async () => {
     if (!monId) return;
     const [relations, liste] = await Promise.all([chargerRelations(monId), chargerEchanges()]);
     setAmis(relations.relations.filter((r) => r.acceptee).map((r) => r.ami));
     setEchanges(liste.echanges);
     if (liste.erreur) setRetour({ erreur: liste.erreur });
-  }, [monId]);
+    await completerWiki(liste.echanges.flatMap((e) => [...e.donne, ...e.demande]));
+  }, [monId, completerWiki]);
 
   useEffect(() => {
     if (!monId) return;
@@ -207,6 +218,7 @@ export function Echanges({ cartesMaison }: { cartesMaison: Carte[] }) {
       setAmis(relations.relations.filter((r) => r.acceptee).map((r) => r.ami));
       setEchanges(liste.echanges);
       if (liste.erreur) setRetour({ erreur: liste.erreur });
+      completerWiki(liste.echanges.flatMap((e) => [...e.donne, ...e.demande]));
     });
     const auRetour = () => recharger();
     window.addEventListener("focus", auRetour);
@@ -214,14 +226,16 @@ export function Echanges({ cartesMaison }: { cartesMaison: Carte[] }) {
       actif = false;
       window.removeEventListener("focus", auRetour);
     };
-  }, [monId, recharger]);
+  }, [monId, recharger, completerWiki]);
 
   async function choisirAmi(choix: Profil) {
     setAmi(choix);
     setDonne({});
     setDemande({});
     setRetour({});
-    setCollectionAmi(await chargerCollectionDe(choix.id));
+    const collection = await chargerCollectionDe(choix.id);
+    setCollectionAmi(collection);
+    await completerWiki(Object.keys(collection).map(Number));
   }
 
   async function proposer() {

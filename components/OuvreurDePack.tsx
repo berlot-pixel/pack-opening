@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { prixDeVente, tirerPack, type Carte, type Rarete } from "@/lib/cartes";
 import { ajouterPack, packDisponible, STOCK_MAX, useCollection, useStockPacks } from "@/lib/collection";
 import { listerExtensions, type IdExtension } from "@/lib/extensions";
+import { tirerPackWiki } from "@/lib/wikipedia";
 import { CarteVisuelle, DosDeCarte } from "./CarteVisuelle";
 import { DECORS } from "./DecorsBooster";
 import { EVENEMENT_RETOUR_ACCUEIL } from "./LienAccueil";
@@ -58,12 +59,15 @@ const MORCEAUX = [
 ];
 
 export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
-  const extensions = listerExtensions(cartesMaison);
+  const collection = useCollection();
+  const cartesWiki = Object.values(collection.wiki).filter((c) => collection.cartes[c.id]);
+  const extensions = listerExtensions(cartesMaison, cartesWiki);
   const [idExtension, setIdExtension] = useState<IdExtension>("maison");
   const extension = extensions.find((e) => e.id === idExtension)!;
   const cartes = extension.cartes;
   const decor = DECORS[idExtension];
-  const collection = useCollection();
+  const [chargement, setChargement] = useState(false); // on attend la réponse de Wikipédia
+  const [erreurTirage, setErreurTirage] = useState("");
   const { disponibles, attente } = useStockPacks();
   const [etape, setEtape] = useState<Etape>("ferme");
   const bloque = etape === "ferme" && disponibles === 0;
@@ -98,10 +102,26 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
     };
   }, []);
 
-  function ouvrir() {
-    if (!packDisponible()) return;
+  async function ouvrir() {
+    if (!packDisponible() || chargement) return;
+    setErreurTirage("");
+    let tirage: Carte[];
+    if (idExtension === "wikipedia") {
+      setChargement(true);
+      try {
+        // Une page déjà obtenue garde la carte (et la rareté) qu'elle avait
+        tirage = (await tirerPackWiki()).map((c) => collection.wiki[c.id] ?? c);
+      } catch (e) {
+        setErreurTirage(e instanceof Error ? e.message : "Wikipédia ne répond pas, réessaie.");
+        return;
+      } finally {
+        setChargement(false);
+      }
+      if (!packDisponible()) return;
+    } else {
+      tirage = tirerPack(cartes);
+    }
     annulerMinuteurs();
-    const tirage = tirerPack(cartes);
     setNouvelles(new Set(tirage.filter((c) => !collection.cartes[c.id]).map((c) => c.id)));
     setPack(tirage);
     setCourante(0);
@@ -248,13 +268,13 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
 
         {(etape === "ferme" || etape === "dechirure" || etape === "sortie") && (
           <div
-            className={`absolute inset-0 z-10 transition duration-500 ${etape === "ferme" && !bloque ? "pack-flotte" : ""} ${bloque ? "pointer-events-none opacity-50 grayscale" : ""} ${
+            className={`absolute inset-0 z-10 transition duration-500 ${etape === "ferme" && !bloque ? "pack-flotte" : ""} ${bloque ? "pointer-events-none opacity-50 grayscale" : ""} ${chargement ? "animate-pulse" : ""} ${
               etape === "sortie" ? "pack-descend" : ""
             }`}
           >
             <button
               onClick={ouvrir}
-              disabled={etape !== "ferme" || bloque}
+              disabled={etape !== "ferme" || bloque || chargement}
               aria-label="Déchirer le booster"
               className="group absolute inset-0 drop-shadow-[0_0_28px_rgb(251_191_36/0.3)] enabled:cursor-pointer enabled:transition enabled:duration-500 enabled:hover:scale-[1.03]"
             >
@@ -333,11 +353,13 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
             ) : (
               <button
                 onClick={ouvrir}
-                className="cursor-pointer font-display text-xl font-bold text-accent transition hover:brightness-125"
+                disabled={chargement}
+                className="cursor-pointer font-display text-xl font-bold text-accent transition hover:brightness-125 disabled:animate-pulse disabled:cursor-wait"
               >
-                Ouvrir
+                {chargement ? "Recherche de pages…" : "Ouvrir"}
               </button>
             )}
+            {erreurTirage && <p className="text-sm text-red-300">{erreurTirage}</p>}
             <div className="mt-4 flex gap-6 rounded-2xl border border-bordure bg-panneau px-6 py-3 text-center">
               <div>
                 <p className="font-display text-lg font-bold">
@@ -355,10 +377,10 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
                 <p className="font-display text-lg font-bold">
                   <span className="text-accent">
                     {cartes.filter((c) => collection.cartes[c.id]).length}
-                  </span>{" "}
-                  / {cartes.length}
+                  </span>
+                  {!extension.infinie && <> / {cartes.length}</>}
                 </p>
-                <p className="text-xs text-white/50">cartes trouvées</p>
+                <p className="text-xs text-white/50">{extension.infinie ? "pages découvertes" : "cartes trouvées"}</p>
               </div>
             </div>
           </>
