@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { definirJoueur } from "./collection";
 
 export type Profil = { id: string; pseudo: string };
 
@@ -33,7 +34,9 @@ export function FournisseurCompte({ children }: { children: ReactNode }) {
           .maybeSingle<Profil>();
         profil = data;
       }
-      if (actif) setEtat({ chargement: false, session, profil });
+      if (!actif) return;
+      setEtat({ chargement: false, session, profil });
+      definirJoueur(profil?.id ?? null);
     }
 
     // Supabase conseille de ne pas l'appeler directement dans ce rappel : on attend un tour

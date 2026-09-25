@@ -24,6 +24,14 @@ function IconeCollection() {
   );
 }
 
+function IconeEchanges() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M17 3l4 4-4 4M21 7H8M7 21l-4-4 4-4M3 17h13" />
+    </svg>
+  );
+}
+
 function IconeAmis() {
   return (
     <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -107,6 +115,7 @@ export function Navigation() {
   const liens = [
     { label: "Paquets", href: "/", icone: <IconePaquet /> },
     { label: "Collection", href: "/collection", icone: <IconeCollection /> },
+    { label: "Échanges", href: "/echanges", icone: <IconeEchanges /> },
     { label: "Amis", href: "/amis", icone: <IconeAmis /> },
     { label: "Compte", href: "/connexion", icone: <IconeCompte />, telephoneSeulement: true },
   ];

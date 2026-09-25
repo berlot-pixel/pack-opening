@@ -1,7 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { prixDeVente, type Carte } from "./cartes";
+import { supabase } from "./supabase";
 
-// Collection et coins sauvegardés dans le navigateur du joueur
+// Collection, coins et stock de paquets.
+// Sans compte : sauvegardés dans le navigateur. Avec un compte : enregistrés dans Supabase
+// (le navigateur garde une copie pour un affichage immédiat).
 export type Sauvegarde = {
   cartes: Record<number, number>;
   packs: number;
@@ -19,11 +22,25 @@ const EVENEMENT = "pack-opening:maj";
 const VIDE: Sauvegarde = { cartes: {}, packs: 0, coins: 0, stock: STOCK_MAX, majStock: 0 };
 
 let etat: Sauvegarde | null = null;
+let joueur: string | null = null; // id du compte connecté, null sans compte
+
+// Chaque compte a sa propre copie dans le navigateur, à part de la partie sans compte
+const cleLocale = () => (joueur ? `${CLE}:${joueur}` : CLE);
+
+function lireLocal(cle: string): Sauvegarde | null {
+  try {
+    const brut = localStorage.getItem(cle);
+    return brut ? { ...VIDE, ...JSON.parse(brut) } : null;
+  } catch {
+    return null;
+  }
+}
 
 function lire(): Sauvegarde {
   if (etat === null) {
     try {
-      const brut = localStorage.getItem(CLE);
+      // Compte jamais synchronisé dans ce navigateur : on part de la partie sans compte
+      const brut = localStorage.getItem(cleLocale()) ?? (joueur ? localStorage.getItem(CLE) : null);
       etat = brut ? { ...VIDE, ...JSON.parse(brut) } : VIDE;
     } catch {
       etat = VIDE;
@@ -35,7 +52,7 @@ function lire(): Sauvegarde {
 function enregistrer(nouvel: Sauvegarde) {
   etat = nouvel;
   try {
-    localStorage.setItem(CLE, JSON.stringify(etat));
+    localStorage.setItem(cleLocale(), JSON.stringify(etat));
   } catch {
     // stockage indisponible : la collection reste en mémoire pour cette visite
   }
@@ -53,6 +70,78 @@ function sAbonner(callback: () => void) {
     window.removeEventListener(EVENEMENT, callback);
     window.removeEventListener("storage", surStockage);
   };
+}
+
+// ---------- Synchronisation avec le compte ----------
+
+type LigneJoueur = { coins: number; packs: number; stock: number; maj_stock: string };
+
+// Recharge la collection depuis Supabase (après un échange, au retour sur l'onglet…)
+export async function synchroniser() {
+  if (!supabase || !joueur) return;
+  const id = joueur;
+  let { data: infos } = await supabase
+    .from("joueurs")
+    .select("coins, packs, stock, maj_stock")
+    .eq("id", id)
+    .maybeSingle<LigneJoueur>();
+
+  // 1re connexion : on importe la partie jouée sans compte dans ce navigateur
+  if (!infos) {
+    const local = lireLocal(CLE) ?? VIDE;
+    const { error } = await supabase.rpc("importer_collection", {
+      p_cartes: local.cartes,
+      p_coins: local.coins,
+      p_packs: local.packs,
+      p_stock: local.stock,
+      p_maj_stock: new Date(local.majStock || Date.now()).toISOString(),
+    });
+    if (error) return; // script supabase/echanges.sql pas encore lancé : on reste sur la copie locale
+    ({ data: infos } = await supabase
+      .from("joueurs")
+      .select("coins, packs, stock, maj_stock")
+      .eq("id", id)
+      .maybeSingle<LigneJoueur>());
+  }
+
+  const { data: lignes } = await supabase
+    .from("collections")
+    .select("carte_id, nombre")
+    .eq("joueur", id)
+    .returns<{ carte_id: number; nombre: number }[]>();
+  if (!infos || !lignes || joueur !== id) return;
+
+  enregistrer({
+    cartes: Object.fromEntries(lignes.map((l) => [l.carte_id, l.nombre])),
+    coins: infos.coins,
+    packs: infos.packs,
+    stock: infos.stock,
+    majStock: new Date(infos.maj_stock).getTime(),
+  });
+}
+
+let ecouteRetour = false;
+
+// Appelé quand le joueur se connecte ou se déconnecte
+export function definirJoueur(id: string | null) {
+  if (id === joueur) return;
+  joueur = id;
+  etat = null; // on relira la bonne copie (compte ou partie sans compte)
+  window.dispatchEvent(new Event(EVENEMENT));
+  if (!ecouteRetour) {
+    ecouteRetour = true;
+    // Un ami a pu accepter un échange pendant ce temps
+    window.addEventListener("focus", () => synchroniser());
+  }
+  synchroniser();
+}
+
+// Envoie l'action au serveur ; s'il refuse, on reprend l'état du serveur
+function envoyer(nom: string, parametres: Record<string, unknown>) {
+  if (!supabase || !joueur) return;
+  supabase.rpc(nom, parametres).then(({ error }) => {
+    if (error) synchroniser();
+  });
 }
 
 export function useCollection(): Sauvegarde {
@@ -102,6 +191,7 @@ export function ajouterPack(pack: Carte[]) {
     stock: Math.max(0, disponibles - 1),
     majStock: depuis,
   });
+  envoyer("ouvrir_paquet", { p_cartes: pack.map((c) => c.id) });
 }
 
 // Vend un exemplaire de la carte (si c'était le dernier, elle quitte la collection)
@@ -113,6 +203,7 @@ export function vendreCarte(carte: Carte) {
   if (nombre === 1) delete cartes[carte.id];
   else cartes[carte.id] = nombre - 1;
   enregistrer({ ...actuel, cartes, coins: actuel.coins + prixDeVente(carte) });
+  envoyer("vendre", { p_ventes: [{ carte: carte.id, nombre: 1, prix: prixDeVente(carte) }] });
 }
 
 // Coins rapportés en vendant tous les doublons (on garde 1 exemplaire de chaque carte)
@@ -128,6 +219,14 @@ export function vendreDoublons(toutes: Carte[]) {
   const gain = gainDoublons(toutes, actuel.cartes);
   if (gain === 0) return;
   const cartes = { ...actuel.cartes };
-  for (const carte of toutes) if ((cartes[carte.id] ?? 0) > 1) cartes[carte.id] = 1;
+  const ventes = [];
+  for (const carte of toutes) {
+    const enTrop = (cartes[carte.id] ?? 0) - 1;
+    if (enTrop > 0) {
+      ventes.push({ carte: carte.id, nombre: enTrop, prix: prixDeVente(carte) });
+      cartes[carte.id] = 1;
+    }
+  }
   enregistrer({ ...actuel, cartes, coins: actuel.coins + gain });
+  envoyer("vendre", { p_ventes: ventes });
 }
