@@ -57,7 +57,7 @@ export function Collection({ cartesMaison }: { cartesMaison: Carte[] }) {
   return (
     <div className="flex flex-col gap-10">
       <div className="-mb-4 flex justify-center">
-        <div className="flex gap-1 rounded-xl border border-bordure bg-panneau p-1">
+        <div className="flex flex-wrap justify-center gap-1 rounded-xl border border-bordure bg-panneau p-1">
           {extensions.map((e) => (
             <button
               key={e.id}

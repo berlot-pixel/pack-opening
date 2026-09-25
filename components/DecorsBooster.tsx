@@ -52,6 +52,13 @@ const BALLON = (
   </>
 );
 
+const EPINGLE = (
+  <path
+    fillRule="evenodd"
+    d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"
+  />
+);
+
 export type DecorBooster = {
   fond: string; // classe CSS de l'emballage
   pointilles: string; // ligne de déchirure en pointillés
@@ -93,6 +100,35 @@ export const DECORS: Record<IdExtension, DecorBooster> = {
             {BALLON}
           </svg>
           <span className="font-display text-2xl font-black tracking-widest text-white">NBA</span>
+        </div>
+      </>
+    ),
+  },
+  // Booster bleu nuit, épingles de carte bleu-blanc-rouge, hexagone tricolore au centre
+  france: {
+    fond: "booster-bleu",
+    pointilles: "border-white/30",
+    illustration: (
+      <>
+        <FormesEparpillees
+          formes={colorer(["#ffffff", "#f87171", "#93c5fd", "#fca5a5", "#e0e7ff", "#ef4444"])}
+          dessin={EPINGLE}
+        />
+        <div className={`${CLASSES_LOGO} flex flex-col items-center gap-1.5`}>
+          <svg viewBox="0 0 100 100" className="w-24 drop-shadow-[0_0_14px_rgb(255_255_255/0.35)]" aria-hidden>
+            <defs>
+              <clipPath id="hexagone">
+                <path d="M50 4 90 27v46L50 96 10 73V27Z" />
+              </clipPath>
+            </defs>
+            <g clipPath="url(#hexagone)">
+              <rect x="0" y="0" width="34" height="100" fill="#2563eb" />
+              <rect x="34" y="0" width="32" height="100" fill="#ffffff" />
+              <rect x="66" y="0" width="34" height="100" fill="#dc2626" />
+            </g>
+            <path d="M50 4 90 27v46L50 96 10 73V27Z" fill="none" stroke="#ffffff" strokeWidth="4" />
+          </svg>
+          <span className="font-display text-xl font-black tracking-widest text-white">VILLES</span>
         </div>
       </>
     ),

@@ -6,7 +6,8 @@ export type Carte = {
   emoji: string;
   description: string;
   rarete: Rarete;
-  // Cartes de joueurs (extension NBA) : on dessine un maillot à la place de l'emoji
+  // Cartes de joueurs (NBA) ou de villes : on dessine un maillot ou un blason à la place de l'emoji
+  visuel?: "maillot" | "blason";
   equipe?: string;
   sigle?: string;
   poste?: string;

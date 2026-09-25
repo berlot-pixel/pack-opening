@@ -172,7 +172,7 @@ export function OuvreurDePack({ cartesMaison }: { cartesMaison: Carte[] }) {
     <div className="flex flex-col items-center gap-6">
       {etape === "ferme" && (
         <div className="flex flex-col items-center gap-3">
-          <div className="flex gap-1 rounded-xl border border-bordure bg-panneau p-1">
+          <div className="flex flex-wrap justify-center gap-1 rounded-xl border border-bordure bg-panneau p-1">
             {extensions.map((e) => (
               <button
                 key={e.id}

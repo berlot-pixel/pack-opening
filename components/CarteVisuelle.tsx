@@ -15,7 +15,26 @@ export function CarteVisuelle({ carte, badge }: { carte: Carte; badge?: string }
         <p className={`text-[9px] font-semibold tracking-[0.2em] uppercase ${rarete.texte}`}>
           {rarete.label}
         </p>
-        {carte.couleur ? (
+        {carte.visuel === "blason" ? (
+          // Ville : blason aux couleurs de sa région, avec le numéro du département
+          <div
+            className="my-2 flex w-full flex-1 items-center justify-center rounded-md"
+            style={{ background: `radial-gradient(closest-side, ${carte.couleur}88, transparent)` }}
+          >
+            <div
+              className="blason flex aspect-[5/6] w-1/2 flex-col items-center overflow-hidden border-2 border-white/80 font-display drop-shadow-lg"
+              style={{ background: carte.couleur, color: carte.couleurTexte }}
+            >
+              <div className="flex h-1.5 w-full">
+                <span className="flex-1 bg-[#1d4ed8]" />
+                <span className="flex-1 bg-white" />
+                <span className="flex-1 bg-[#dc2626]" />
+              </div>
+              <span className="mt-2 text-[8px] font-bold tracking-widest opacity-80">DÉP.</span>
+              <span className="text-2xl leading-none font-black sm:text-3xl">{carte.sigle}</span>
+            </div>
+          </div>
+        ) : carte.couleur ? (
           // Joueur : maillot aux couleurs de son équipe
           <div
             className="my-2 flex w-full flex-1 items-center justify-center rounded-md"
@@ -36,8 +55,8 @@ export function CarteVisuelle({ carte, badge }: { carte: Carte; badge?: string }
         )}
         <p className="font-display text-base leading-tight font-semibold text-white">{carte.nom}</p>
         {carte.equipe && (
-          <p className="mt-0.5 text-[10px] leading-tight text-white/60">
-            {carte.equipe} · {carte.poste}
+          <p className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-white/60">
+            {carte.visuel === "blason" ? carte.poste : `${carte.equipe} · ${carte.poste}`}
           </p>
         )}
         <div className={`my-1.5 h-px w-8 bg-current opacity-50 ${rarete.texte}`} />
